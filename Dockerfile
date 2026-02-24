@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
     zlib1g-dev \
+    libcap2-bin \
     && rm -rf /var/lib/apt/lists/*
 
 # Build and install GPAC from source (not available in Bookworm repos)
@@ -28,7 +29,7 @@ RUN cd /tmp && \
 # Verify MP4Box is installed
 RUN MP4Box -version || echo "MP4Box installed but version check failed (expected)"
 
-# Create a non-root user
+# Create a non-root user early
 RUN useradd -m -u 1000 appuser
 
 # Set working directory
@@ -37,8 +38,21 @@ WORKDIR /app
 # Change ownership of /app to appuser
 RUN chown appuser:appuser /app
 
-# Copy application files
+# Copy application files (before wrapper to avoid overwriting)
 COPY --chown=appuser:appuser . .
+
+# Download and setup wrapper binary with required capabilities
+# This must be done as root and AFTER ownership changes to preserve capabilities
+RUN cd /tmp && \
+    wget -q https://github.com/WorldObservationLog/wrapper/releases/download/Wrapper.x86_64.0df45b5/Wrapper.x86_64.0df45b5.zip && \
+    unzip -q Wrapper.x86_64.0df45b5.zip && \
+    mkdir -p /app/wrapper && \
+    mv wrapper /app/wrapper/ && \
+    chown appuser:appuser /app/wrapper/wrapper && \
+    chmod +x /app/wrapper/wrapper && \
+    setcap cap_sys_chroot+ep /app/wrapper/wrapper && \
+    rm -f Wrapper.x86_64.0df45b5.zip && \
+    echo "Wrapper binary installed with SYS_CHROOT capability"
 
 # Install Python dependencies
 RUN pip install --no-cache-dir flask pyyaml

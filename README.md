@@ -70,7 +70,7 @@ For a containerized setup that handles all dependencies automatically:
 # Build the Docker image
 docker build -t alac-rip .
 
-# Run the container (bash/sh/zsh)
+# Run the container
 docker run -p 5000:5000 -v $(pwd)/downloads:/app/downloads alac-rip
 
 # Or on Windows PowerShell:
