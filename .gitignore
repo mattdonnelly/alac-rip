@@ -28,6 +28,11 @@ wrapper.x86_64.zip
 apple-music-downloader/
 downloads/
 
+# QEMU VM files (for M1 Mac alternative setup)
+qemu-vm/
+*.qcow2
+*.qcow2.backup
+
 # OS
 .DS_Store
 Thumbs.db

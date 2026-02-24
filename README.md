@@ -87,6 +87,69 @@ docker run --platform linux/amd64 -p 5000:5000 -v $(pwd)/downloads:/app/download
 
 Access the web interface at `http://localhost:5000`
 
+### Alternative for M1/M2/M3 Macs: QEMU VM Method
+
+If you experience persistent issues with the Docker approach on Apple Silicon, the wrapper author provides a QEMU VM image that runs the wrapper in a fully emulated x86_64 environment. This method is more resource-intensive but may work better in some cases.
+
+#### Prerequisites
+
+Install QEMU on your Mac:
+```bash
+brew install qemu
+```
+
+#### Setup Instructions
+
+1. **Download the QEMU VM image:**
+   
+   The wrapper author provides a pre-configured qcow2 VM image via GitHub Actions:
+   - Go to: https://github.com/WorldObservationLog/wrapper/actions/runs/22147727310
+   - Download the artifact (requires GitHub login)
+   - Extract the qcow2 file from the downloaded zip
+
+2. **Start the QEMU VM:**
+   
+   ```bash
+   # Basic command to run the VM
+   qemu-system-x86_64 \
+     -m 2048 \
+     -smp 2 \
+     -drive file=/path/to/downloaded.qcow2,format=qcow2 \
+     -net nic -net user,hostfwd=tcp::10020-:10020,hostfwd=tcp::20020-:20020,hostfwd=tcp::30020-:30020 \
+     -nographic
+   ```
+   
+   This command:
+   - Allocates 2GB RAM (`-m 2048`)
+   - Uses 2 CPU cores (`-smp 2`)
+   - Forwards wrapper ports (10020, 20020, 30020) to your Mac
+   - Runs in terminal mode (`-nographic`)
+
+3. **Connect to the VM:**
+   
+   Once the VM boots, you should be able to access the wrapper service on the forwarded ports. The wrapper should be pre-configured and running inside the VM.
+
+4. **Run the Flask app on your Mac:**
+   
+   Instead of running everything in Docker, you can:
+   - Install dependencies on your Mac: `pip3 install flask pyyaml`
+   - Run the Flask app locally: `python3 main.py`
+   - Configure it to connect to the wrapper running in the QEMU VM (ports 10020, 20020, 30020)
+
+#### Notes on QEMU Method
+
+- **Performance**: Running a full VM is slower than Docker emulation
+- **Resource usage**: Requires more RAM and CPU
+- **Setup complexity**: More manual setup required
+- **When to use**: Only if Docker method consistently fails
+- **VM contents**: The qcow2 image contains a minimal Linux with wrapper pre-installed
+
+#### Recommended Approach
+
+For most M1/M2/M3 users, the **Docker method with explicit platform flags** (shown above) is simpler and sufficient. Only use the QEMU VM method if you encounter persistent issues that Docker cannot resolve.
+
+**📚 For detailed QEMU VM setup instructions, see [QEMU_SETUP.md](QEMU_SETUP.md)**
+
 ## 📖 Usage
 
 ### First Time Setup
