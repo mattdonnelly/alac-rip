@@ -16,6 +16,9 @@ RUN useradd -m -u 1000 appuser
 # Set working directory
 WORKDIR /app
 
+# Change ownership of /app to appuser
+RUN chown appuser:appuser /app
+
 # Copy application files
 COPY --chown=appuser:appuser . .
 
