@@ -1,5 +1,5 @@
-# Use Python 3.11 slim image as base
-FROM python:3.11-slim
+# Use Python 3.11 slim image based on Debian Bullseye (gpac is not available in newer Debian versions)
+FROM python:3.11-slim-bullseye
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
