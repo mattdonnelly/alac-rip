@@ -52,15 +52,20 @@ def firstsetup():
         print("\n❌ ERROR: Missing required dependencies!\n")
         
         if missing_binaries:
-            print("System packages needed:")
+            print("System packages needed (Debian/Ubuntu):")
             print(f"  sudo apt-get install {' '.join(missing_binaries)}")
-            print("\nOr use Docker for automatic dependency management.\n")
+            print("\nFor other distributions, install equivalent packages using your package manager.")
+            print("Or use Docker for automatic dependency management.\n")
         
         if missing_python:
+            # Mapping for PyPI package name to apt package name
+            pypi_to_apt = {'pyyaml': 'yaml'}
+            
             print("Python packages needed:")
             print(f"  pip install {' '.join(missing_python)}")
-            print("  OR")
-            print(f"  sudo apt-get install python3-{' python3-'.join([p.replace('pyyaml', 'yaml') for p in missing_python])}")
+            print("  OR (Debian/Ubuntu):")
+            apt_packages = [f"python3-{pypi_to_apt.get(p, p)}" for p in missing_python]
+            print(f"  sudo apt-get install {' '.join(apt_packages)}")
         
         sys.exit(1)
     
