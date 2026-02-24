@@ -93,6 +93,75 @@ To exit the QEMU VM:
 
 Or run `poweroff` inside the VM if you have shell access.
 
+## Accessing the VM Shell
+
+If you need to access the VM's shell for troubleshooting:
+
+### Option 1: Serial Console (if `-nographic` is used)
+
+When running with `-nographic`, you'll have direct access to the VM's console. You can:
+- Log in if prompted (credentials depend on the VM image)
+- Run commands directly
+- Check running processes: `ps aux`
+- Check network: `netstat -tlnp`
+
+### Option 2: SSH Access (if configured)
+
+If the VM has SSH configured, you can add SSH port forwarding:
+
+```bash
+qemu-system-x86_64 \
+  -m 2048 \
+  -smp 2 \
+  -drive file=qemu-vm/wrapper.qcow2,format=qcow2 \
+  -net nic \
+  -net user,hostfwd=tcp::2222-:22,hostfwd=tcp::10020-:10020,hostfwd=tcp::20020-:20020,hostfwd=tcp::30020-:30020 \
+  -nographic
+```
+
+Then connect via:
+```bash
+ssh -p 2222 user@localhost
+```
+
+### Inspecting the VM
+
+Once you have shell access, you can:
+
+1. **Check if wrapper is running:**
+   ```bash
+   ps aux | grep wrapper
+   ```
+
+2. **Check wrapper installation location:**
+   ```bash
+   which wrapper
+   find / -name "wrapper" -type f 2>/dev/null
+   ```
+
+3. **Check listening ports:**
+   ```bash
+   netstat -tlnp | grep -E "10020|20020|30020"
+   # or
+   ss -tlnp | grep -E "10020|20020|30020"
+   ```
+
+4. **Check wrapper logs (if available):**
+   ```bash
+   journalctl -u wrapper
+   # or check common log locations
+   cat /var/log/wrapper.log
+   dmesg | tail
+   ```
+
+5. **Check filesystem structure:**
+   ```bash
+   ls -la /
+   ls -la /root
+   ls -la /home
+   pwd
+   ```
+
 ## Running the Flask Application
 
 Once the QEMU VM is running, you can run the Flask web interface on your Mac:
@@ -106,6 +175,22 @@ pip3 install flask pyyaml
 ### 2. Configure Wrapper Connection
 
 The Flask app will automatically connect to `localhost:10020`, `localhost:20020`, and `localhost:30020`, which are forwarded from the QEMU VM.
+
+**Important Note about Flask App with QEMU VM:**
+
+The current Flask application is designed to run the wrapper binary locally. When using the QEMU VM method, there are some limitations:
+
+- **Wrapper Login via Flask UI won't work** - The Flask app tries to execute a local wrapper binary, which won't interact with the wrapper running in the VM
+- **You need to authenticate directly in the VM** - Login to the wrapper must be done inside the QEMU VM, not through the Flask web interface
+- **The Flask app becomes a monitoring tool only** - You can use it to monitor downloads, but not to manage wrapper authentication
+
+**Recommended Approach:**
+
+1. Start the QEMU VM with the wrapper
+2. Login to the wrapper inside the VM using the command line
+3. Then use the Flask app for downloading and monitoring
+
+**Alternative:** If you need the full Flask integration (including login via web UI), use the Docker method instead of QEMU VM.
 
 ### 3. Start the Flask App
 
@@ -129,6 +214,70 @@ The qcow2 image provided by the wrapper author contains:
 - All necessary dependencies
 
 ## Troubleshooting
+
+### "chdir: No such file or directory" Error
+
+**Symptom:** When running the wrapper manually inside the VM, you see:
+```
+chdir: No such file or directory
+```
+
+**Root Cause:** The wrapper binary is trying to change to a working directory that doesn't exist in the VM's filesystem.
+
+**Solutions:**
+
+1. **Create the working directory:**
+   
+   If you have shell access to the VM, create the directory the wrapper expects:
+   ```bash
+   # Inside the QEMU VM
+   mkdir -p /root
+   cd /root
+   ./wrapper -L email:password
+   ```
+   
+   Or create a specific working directory:
+   ```bash
+   mkdir -p /app/wrapper
+   cd /app/wrapper
+   ./wrapper -L email:password
+   ```
+
+2. **Run wrapper from its installation directory:**
+   
+   The wrapper should be pre-installed in the VM. Find and run it from there:
+   ```bash
+   # Inside the QEMU VM - find where wrapper is installed
+   find / -name "wrapper" -type f 2>/dev/null
+   
+   # Then cd to that directory and run it
+   cd /path/to/wrapper/directory
+   ./wrapper -L email:password
+   ```
+
+3. **Check if wrapper is already running:**
+   
+   The VM image should auto-start the wrapper service. Check if it's already running:
+   ```bash
+   # Inside the QEMU VM
+   ps aux | grep wrapper
+   netstat -tlnp | grep -E "10020|20020|30020"
+   ```
+   
+   If it's already running, you don't need to start it manually!
+
+4. **Use absolute paths:**
+   
+   Instead of relying on the current directory, use absolute paths:
+   ```bash
+   /usr/local/bin/wrapper -L email:password
+   # or wherever the wrapper is installed in the VM
+   ```
+
+**Important Note:** The QEMU VM image provided by the wrapper author should have the wrapper pre-configured to auto-start. If you're getting this error, it likely means:
+- You're trying to manually run the wrapper when it's already running
+- The wrapper isn't installed where you expect in the VM
+- You need to check the VM's filesystem structure
 
 ### VM Won't Boot
 
