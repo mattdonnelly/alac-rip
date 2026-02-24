@@ -1,5 +1,6 @@
 # Use Python 3.11 image based on Debian Bookworm (for GLIBC 2.36 required by wrapper binary)
-FROM python:3.11-bookworm
+# Explicitly set platform to linux/amd64 since the wrapper binary is x86_64 only
+FROM --platform=linux/amd64 python:3.11-bookworm
 
 # Install build dependencies and system dependencies
 RUN apt-get update && apt-get install -y \

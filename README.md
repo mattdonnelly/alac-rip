@@ -77,6 +77,14 @@ docker run -p 5000:5000 -v $(pwd)/downloads:/app/downloads alac-rip
 # docker run -p 5000:5000 -v ${PWD}/downloads:/app/downloads alac-rip
 ```
 
+**Note for Apple Silicon (M1/M2/M3) and ARM users:**
+The wrapper binary is x86_64 only. Docker will automatically use QEMU emulation to run the container. If you encounter issues, ensure Docker Desktop has "Use Rosetta for x86_64/amd64 emulation on Apple Silicon" enabled in Settings → General, or explicitly specify the platform:
+
+```bash
+docker build --platform linux/amd64 -t alac-rip .
+docker run --platform linux/amd64 -p 5000:5000 -v $(pwd)/downloads:/app/downloads alac-rip
+```
+
 Access the web interface at `http://localhost:5000`
 
 ## 📖 Usage
