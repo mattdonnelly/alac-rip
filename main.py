@@ -11,6 +11,13 @@ BENTO4_DIR = PROJECT_DIR / "bento4"
 WRAPPER_DIR = PROJECT_DIR / "wrapper"
 AMD_DIR = PROJECT_DIR / "apple-music-downloader"
 
+# Mapping for PyPI package names to apt package names (for Debian/Ubuntu)
+# Some packages have different names between PyPI and apt repositories
+PYPI_TO_APT_MAPPING = {
+    'pyyaml': 'yaml',   # PyPI: pyyaml, APT: python3-yaml
+    'flask': 'flask',   # PyPI: flask, APT: python3-flask
+}
+
 def firstsetup():
     # --- Check for required dependencies ---
     print("Checking for required dependencies...")
@@ -59,17 +66,10 @@ def firstsetup():
             print("Or use Docker for automatic dependency management.\n")
         
         if missing_python:
-            # Some PyPI package names differ from apt package names
-            # Map PyPI name -> apt package name (without 'python3-' prefix)
-            pypi_to_apt = {
-                'pyyaml': 'yaml',  # PyPI: pyyaml, APT: python3-yaml
-                'flask': 'flask',  # PyPI: flask, APT: python3-flask (explicit for clarity)
-            }
-            
             print("Python packages needed:")
             print(f"  pip install {' '.join(missing_python)}")
             print("  OR (Debian/Ubuntu):")
-            apt_packages = [f"python3-{pypi_to_apt.get(p, p)}" for p in missing_python]
+            apt_packages = [f"python3-{PYPI_TO_APT_MAPPING.get(p, p)}" for p in missing_python]
             print(f"  sudo apt-get install {' '.join(apt_packages)}")
         
         sys.exit(1)
