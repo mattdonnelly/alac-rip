@@ -37,6 +37,7 @@ All credit for the actual downloading capabilities goes to these original creato
 1. **Install system dependencies:**
    ```bash
    sudo apt-get update
+   # Note: Required dependencies are also checked/listed by main.py on first run
    sudo apt-get install git ffmpeg gpac golang-go wget python3-flask python3-yaml
    ```
 

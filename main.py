@@ -33,6 +33,7 @@ def firstsetup():
             print(f"  ✓ {binary} found")
     
     # Check Python dependencies
+    # Format: 'import_name': 'pypi_package_name'
     required_python_modules = {
         'flask': 'flask',
         'yaml': 'pyyaml'
@@ -58,8 +59,12 @@ def firstsetup():
             print("Or use Docker for automatic dependency management.\n")
         
         if missing_python:
-            # Mapping for PyPI package name to apt package name
-            pypi_to_apt = {'pyyaml': 'yaml'}
+            # Some PyPI package names differ from apt package names
+            # Map PyPI name -> apt package name (without 'python3-' prefix)
+            pypi_to_apt = {
+                'pyyaml': 'yaml',  # PyPI: pyyaml, APT: python3-yaml
+                'flask': 'flask',  # PyPI: flask, APT: python3-flask (explicit for clarity)
+            }
             
             print("Python packages needed:")
             print(f"  pip install {' '.join(missing_python)}")
